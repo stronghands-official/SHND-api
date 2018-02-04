@@ -3,7 +3,7 @@
 ## Repo Info
 -
 
-## What is StrongHands?
+## What is StrongHands API?
 
 StrongHands API is a StrongHands network-compatible, community-developed API.
 
