@@ -17,7 +17,7 @@ To help faciliate broad community cooperation, a number of trusted StrongHands/P
 
 
 ### About StrongHands
-[StrongHands](http://stronghands.net/) (abbreviated SHND), also known as StrongHands is using [proof-of-stake consensus](http://stronghands.net/bin/stronghands-paper.pdf) as a security model, with a combined [proof-of-stake](http://stronghands.net/bin/stronghands-paper.pdf)/[proof-of-work](https://en.wikipedia.org/wiki/Proof-of-work_system) minting system. StrongHands is based on [Bitcoin](http://bitcoin.org/en/), while introducing many important innovations to cryptocurrency field including new security model, energy efficiency, better minting model and more adaptive response to rapid change in network computation power.
+[StrongHands](http://stronghands.info/) (abbreviated SHND), also known as StrongHands is using [proof-of-stake consensus](http://stronghands.net/bin/stronghands-paper.pdf) as a security model, with a combined [proof-of-stake](http://stronghands.net/bin/stronghands-paper.pdf)/[proof-of-work](https://en.wikipedia.org/wiki/Proof-of-work_system) minting system. StrongHands is based on [Bitcoin](http://bitcoin.org/en/), while introducing many important innovations to cryptocurrency field including new security model, energy efficiency, better minting model and more adaptive response to rapid change in network computation power.
 
 
 ## Repo Guidelines
