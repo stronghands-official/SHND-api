@@ -1,11 +1,48 @@
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    padding: 50px;
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
 a {
-  color: #00B7FF;
+    color: #00B7FF;
 }
-.main{
+
+.header {
     text-align: center;
+}
+
+.highlight {
+    margin: 0 auto;
+    width: 50%;
+}
+
+.center-text {
+    margin: 0 auto;
+    text-align: center;
+}
+
+.tab {
+    margin-left: 2em;
+}
+
+.spacer {
+    margin-bottom: 5em;
+}
+
+.endpoint {
+    margin: 0 auto;
+    width: 50%;
+}
+
+pre.wrap {
+    background-color: #f3f3f3;
+    display: inline-block !important;
+    padding-left: 1em!important;
+    padding-right: 1em !important;
+    padding-top: 0.2em;
+    padding-bottom: 0.1em;
+}
+
+pre {
+    background-color: #f3f3f3;
 }

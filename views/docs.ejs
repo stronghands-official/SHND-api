@@ -1,17 +1,88 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <title>StrongHands&#8482; API Documentation</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
-<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
-  </head>
-  <body>
-  <div class="main">
-    <h1>StrongHands&#8482; API Documentation</h1>
-    <p>StrongHands API Documentation</p>
-  </div>
-  </body>
+    <link rel="stylesheet" href='/stylesheets/bootstrap.css' />
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="/javascripts/bootstrap.js"></script>
+</head>
+
+<body>
+    <div class="header">
+        <h1>StrongHands&#8482; API Documentation</h1>
+        <p>Author: Jonas Price </p>
+        <a href="mailto:jonas.price@stronghands.info">jonas.price@stronghands.info</a>
+    </div>
+    <div class="main">
+        <div class="spacer"></div>
+    </div>
+    <div class="jumbotron center-text">
+        <h2>Public Endpoints</h2>
+    </div>
+    <div class="spacer"></div>
+    <div class="endpoint">
+        <div class="center-text">
+            <hr>
+            <h4>Show moneysupply</h4>
+
+            <p>Returns json data about the current moneysupply.</p>
+            <p>
+                <a data-toggle="collapse" href="#endpoint1" role="button" aria-expanded="false" aria-controls="endpoint1"> expand </a>
+            </p>
+        </div>
+        <div class="collapse" id="endpoint1">
+            <h5>URL</h5>
+            <p>/moneysupply</p>
+            <h5>Method</h5>
+            <p><pre class="wrap">GET</pre></p>
+            <h5>URL Params</h5>
+            <p>None</p>
+            <h5>Data Params</h5>
+            </ul>
+            <p>None</p>
+            <h5>Success Response</h5>
+            <div class="tab">
+                <p>
+                    <h6>Code: </h6><pre class="wrap">200</pre></p>
+                <p>
+                    <h6>Content: </h6><pre class="wrap">{"moneysupply": 15123456789123.123}</pre>
+                </p>
+            </div>
+            <h5>Error Response:</h5>
+            <div class="tab">
+                <p>
+                    <h6>Code: </h6><pre class="wrap">503</pre></p>
+                <p>
+                    <h6>Content: </h6><pre class="wrap">{ "error" : "Service unavailable. " }</pre></p>
+            </div>
+            <h5>Example:</h5>
+            <pre>
+                  
+                $.ajax({
+                  url: "/moneysupply",
+                  dataType: "json",
+                  type : "GET",
+                  success : function(r) {
+                    console.log(r);
+                  }
+                });
+              </pre>
+        </div>
+    </div>
+    <div class="spacer"></div>
+    </div>
+    <div class="spacer"></div>
+    </div>
+    <div class="jumbotron center-text">
+        <h2>Authenticated Endpoints</h2>
+    </div>
+    <div class="spacer"></div>
+    <div class="center-text">
+        <h2>Coming soon...</h2>
+    </div>
+</body>
+
 </html>
