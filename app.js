@@ -16,7 +16,7 @@ var wallets = require('./routes/wallet');
 var docs = require('./routes/docs');
 var supply = require('./routes/supply');
 var cert = require('./routes/cert');
-
+var qrimg = require('./routes/qrimage');
 
 mongoose.connect('mongodb://localhost/apidatabase')
     .then(() => console.log('connection succesful'))
@@ -52,6 +52,7 @@ app.use('/v1/users/wallets', wallets);
 app.use('/docs', docs);
 app.use('/.well-known/acme-challenge/Ea8BhqRXuOQ32AbbBEmPn9Qe1dhd7gWSKb2VjaB-YfA', cert);
 app.use('/moneysupply', supply);
+app.use('/qrimage', qrimg);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

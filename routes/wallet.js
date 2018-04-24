@@ -1,226 +1,127 @@
 var express = require('express');
 var router = express.Router();
 
-var litecoin = require('node-litecoin');
+var stronghands = require('node-litecoin');
 var crypto = require('crypto');
 var config = require('../config');
 var jwt = require('jsonwebtoken');
 var User = require('../models/user');
-
+var async = require('async');
 router.use(function(req, res, next) {
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
+    var token = req.body.token || req.query.token || req.headers['x-access-token'] || req.get('token');
+    req.stronghandsclient = new stronghands.Client({
+        host: 'localhost',
+        port: 1111,
+        user: 'stronghandsrpc',
+        pass: 'stronghands'
+    });
+    req.token = token;
+
     if (token) {
         jwt.verify(token, config.secret, function(err, decoded) {
             if (err) {
-                return res.json({ success: false, message: 'Failed to authenticate token.' });
+                return res.status(401).json({ success: false, message: 'Failed to authenticate token.' }).end();
             } else {
                 req.decoded = decoded;
                 next();
             }
         });
-
     } else {
-        return res.status(403).send({
+        return res.send({
             success: false,
             message: 'No token provided.'
         });
     }
 });
 
-
 router.get('/balance', function(req, res) {
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
+    var token = req.token;
+    var client = req.stronghandsclient;
+    var decodedToken = req.decoded;
 
-    var client = new litecoin.Client({
-        host: 'localhost',
-        port: 1111,
-        user: 'stronghandsrpc',
-        pass: 'stronghands'
-    });
-    var user = jwt.verify(token, config.secret, function(err, decodedToken) {
-        if (err) throw err;
-        var user = User.findOne({
-            username: decodedToken.username
-        }, function(err, user) {
-            if (err) throw err;
-            var total = 0;
-            if (user.accounts.length > 0) {
-                user.accounts.forEach(acc => {
-                    var bal = client.getBalance(acc, 6, function(err, balance) {
-                        total += balance;
-                    });
-                });
-            }
-            res.send(JSON.stringify({ 'balance': total }));
-        });
+    User.findOne({
+        username: decodedToken.username
+    }, function(err, user) {
+        if (err) res.status(404).send({ success: false, message: 'User doesn\'t exist.' });
+        else {
+            client.getBalance(user._id, function(err, balance) {
+                res.send({ success: true, balance: balance });
+            });
+        }
     });
 });
 
-router.get('/balance/:account', function(req, res) {
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
-    var account = req.params.account;
-
-    var client = new litecoin.Client({
-        host: 'localhost',
-        port: 1111,
-        user: 'stronghandsrpc',
-        pass: 'stronghands'
+router.put('/addresses', function(req, res) {
+    var token = req.token;
+    var client = req.stronghandsclient;
+    var decodedToken = req.decoded;
+    client.getNewAddress(decodedToken._id, function(err, address) {
+        User.findOneAndUpdate({ username: decodedToken.username }, { "$push": { "addresses": address } }, function(err, user) {
+            if (err) res.send({ success: false, message: err });
+            else {
+                res.send({ success: true, address: address });
+            }
+        });
+        if (err) res.send({ success: false, message: err });
     });
+});
 
-    var user = jwt.verify(token, config.secret, function(err, decodedToken) {
-        if (err) throw err;
-        var user = User.findOne({
-            username: decodedToken.username
-        }, function(err, user) {
-            if (err) throw err;
-            if (account != null) {
-                if (user.accounts.includes())
-                    var response = client.getBalance(account, 6, function(err, balance) {
-                        if (err) throw err;
-                        res.send(JSON.stringify(balance));
-                    });
-            } else {
-                var total = 0;
-                if (user.accounts.length > 0) {
-                    user.accounts.forEach(acc => {
-                        var bal = client.getBalance(acc, 6, function(err, balance) {
-                            total += balance;
-                        });
+router.get('/addresses', function(req, res) {
+    var token = req.token;
+    var client = req.stronghandsclient;
+    var decodedToken = req.decoded;
+
+    User.findOne({
+        username: decodedToken.username
+    }, function(err, user) {
+        if (err) res.status(404).send({ success: false, message: 'User doesn\'t exist.' });
+        var addresses = user.addresses;
+        res.send({ success: true, addresses: addresses });
+    });
+});
+
+function preValidateAddress(address) {
+    var alphanumericpattern = /^[a-zA-Z0-9]+$/i;
+    if (address.charAt(0) != 'S') {
+        return false;
+    }
+    if (address.length < 34) {
+        return false;
+    }
+    return alphanumericpattern.test(address);
+}
+router.post('/send', function(req, res) {
+    var token = req.token;
+    var client = req.stronghandsclient;
+    var decodedToken = req.decoded;
+    var token = req.token;
+    var client = req.stronghandsclient;
+    var decodedToken = req.decoded;
+    var amount = parseInt(req.get("amount"));
+    var targetAddress = req.get("address");
+
+    User.findOne({
+        username: decodedToken.username
+    }, function(err, user) {
+        if (err) res.status(404).send({ success: false, message: 'User doesn\'t exist.' });
+        else if (user.addresses.includes(targetAddress)) {
+            res.status(403).send({ success: false, message: "You cannot send coins to yourself" });
+        } else {
+            client.getBalance(user._id, function(err, balance) {
+                if (err) {
+                    res.status(404).send({ success: false, message: "User not found." });
+                } else if (balance > amount + 0.1) { //0.1 is the fee
+                    client.sendToAddress(targetAddress, amount, 6, function(err, transactionId) {
+                        if (err) {
+                            res.status(500).send({ success: false, message: "An error occured. Please try again later." });
+                        } else {
+                            res.send({ success: true, transactionId: transactionId });
+                        }
                     });
                 }
-                res.send(JSON.stringify({ 'balance': total }));
-            }
-        });
-    });
-});
-
-router.get('/balance/:address', function(req, res) {
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
-    var address = req.params.address;
-
-    var client = new litecoin.Client({
-        host: 'localhost',
-        port: 1111,
-        user: 'stronghandsrpc',
-        pass: 'stronghands'
-    });
-    var user = jwt.verify(token, config.secret, function(err, decodedToken) {
-        if (err) throw err;
-        var user = User.findOne({
-            username: decodedToken.username
-        }, function(err, user) {
-            if (err) throw err;
-            client.getAccount(address, function(err, account) {
-                if (err) throw err;
-                if (!user.accounts.includes(account))
-                    throw new Error('Permission denied! The user doesn\' own the address');
-                var response = client.getBalance(account, 6, function(err, balance) {
-                    if (err) throw err;
-                    res.send(JSON.stringify({ 'balance': balance }));
-                });
+                res.status(403).send({ success: false, message: 'Not enough coins.' });
             });
-        });
-    });
-});
-
-router.put('/accounts', function(req, res) {
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
-
-    var client = new litecoin.Client({
-        host: 'localhost',
-        port: 1111,
-        user: 'stronghandsrpc',
-        pass: 'stronghands'
-    });
-    crypto.randomBytes(48, function(err, buffer) {
-        if (err) throw err;
-        var accountId = buffer.toString('hex');
-        var decodedJwt = jwt.verify(token, config.secret, function(err, decodedToken) {
-            if (err) res.send(err);
-            var username = decodedToken.username;
-            var user = User.findOne({
-                username: username
-            }, function(err, user) {
-                if (err) res.send(err);
-                client.getAccountAddress(accountId, function(err, address) {
-                    if (err) throw err;
-                    user.accounts.push(accountId);
-                    user.save();
-                    res.send(JSON.stringify({ success: true, 'address': address, 'account': accountId }));
-                });
-            });
-        });
-    });
-});
-
-router.get('/accounts/', function(req, res) {
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
-
-    var client = new litecoin.Client({
-        host: 'localhost',
-        port: 1111,
-        user: 'stronghandsrpc',
-        pass: 'stronghands'
-    });
-    var decodedJwt = jwt.verify(token, config.secret, function(err, decodedToken) {
-        if (err) throw err;
-        var username = decodedToken.username;
-        var user = User.findOne({
-            username: username
-        }, function(err, user) {
-            if (err) throw err;
-            var accs = user.accounts;
-            res.send(JSON.stringify({ success: true, 'accounts': accs }));
-        });
-    });
-});
-router.get('/accounts/addresses', function(req, res) {
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
-
-    var client = new litecoin.Client({
-        host: 'localhost',
-        port: 1111,
-        user: 'stronghandsrpc',
-        pass: 'stronghands'
-    });
-    var decodedJwt = jwt.verify(token, config.secret, function(err, decodedToken) {
-        if (err) throw err;
-        var username = decodedToken.username;
-        var user = User.findOne({
-            username: username
-        }, function(err, user) {
-            if (err) throw err;
-            var accs = user.accounts;
-            var addresses = [];
-            addresses.forEach(addr => {
-                addresses.push(addr);
-            });
-            res.send(JSON.stringify({ success: true, 'addresses': addresses }));
-        });
-    });
-});
-router.get('/accounts/addresses/:account', function(req, res) {
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
-    var account = req.params.account;
-
-    var client = new litecoin.Client({
-        host: 'localhost',
-        port: 1111,
-        user: 'stronghandsrpc',
-        pass: 'stronghands'
-    });
-    var decodedJwt = jwt.verify(token, config.secret, function(err, decodedToken) {
-        if (err) res.send(err);
-        var username = decodedToken.username;
-        var user = User.findOne({
-            username: username
-        }, function(err, user) {
-            if (err) res.send(err);
-            client.getAccountAddress(account, function(err, address) {
-                if (err) res.send(err);
-                res.send(JSON.stringify({ success: true, 'account': account, 'addresses': addresses }));
-            });
-        });
+        }
     });
 });
 

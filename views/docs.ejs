@@ -72,6 +72,55 @@
               </pre>
         </div>
     </div>
+    <div class="endpoint">
+        <div class="center-text">
+            <hr>
+            <h4>Generate qr-code</h4>
+
+            <p>Returns an qr-code as png image of the address submitted.</p>
+            <p>
+                <a data-toggle="collapse" href="#endpoint2" role="button" aria-expanded="false" aria-controls="endpoint2"> expand </a>
+            </p>
+        </div>
+        <div class="collapse" id="endpoint2">
+            <h5>URL</h5>
+            <p>/qrimage/:address</p>
+            <h5>Method</h5>
+            <p><pre class="wrap">GET</pre></p>
+            <h5>URL Params</h5>
+            <p>/:address</p>
+            <h5>Data Params</h5>
+            </ul>
+            <p>None</p>
+            <h5>Success Response</h5>
+            <div class="tab">
+                <p>
+                    <h6>Code: </h6><pre class="wrap">200</pre></p>
+                <p>
+                    <h6>Content: </h6> image / png
+                </p>
+            </div>
+            <h5>Error Response:</h5>
+            <div class="tab">
+                <p>
+                    <h6>Code: </h6><pre class="wrap">503</pre></p>
+                <p>
+                    <h6>Content: </h6><pre class="wrap">{ "error" : "Service unavailable. " }</pre></p>
+            </div>
+            <h5>Example:</h5>
+            <pre>
+                  
+                $.ajax({
+                  url: "/qrimage",
+                  dataType: "image/png",
+                  type : "GET",
+                  success : function(r) {
+                    dosomthing(r);
+                  }
+                });
+              </pre>
+        </div>
+    </div>
     <div class="spacer"></div>
     </div>
     <div class="spacer"></div>
