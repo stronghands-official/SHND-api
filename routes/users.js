@@ -5,10 +5,19 @@ var url = require('url');
 var config = require('../config');
 var jwt = require('jsonwebtoken');
 var request = require('request');
-
+var RateLimit = require('express-rate-limit');
 var User = require('../models/user');
 
-router.post('/register', function(req, res) {
+
+var createAccountLimiter = new RateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour window
+    delayAfter: 1, // begin slowing down responses after the first request
+    delayMs: 3 * 1000, // slow down subsequent responses by 3 seconds per request
+    max: 5, // start blocking after 5 requests
+    message: "Too many accounts created from this IP, please try again after an hour"
+});
+
+router.post('/register', createAccountLimiter, function(req, res) {
     var email = req.get("email") || req.body.email;
     var username = req.get("username") || req.body.username;
     var password = req.get("password") || req.body.password;
@@ -85,7 +94,7 @@ router.post('/register', function(req, res) {
                                     });
                                     res.status(500).send({ success: false, message: 'Unable to send confirmation email.' });
                                 }
-                                client.getNewAddress(function(err, address) {
+                                client.getNewAddress(user._id, function(err, address) {
                                     if (err) res.status(500).send({ success: false, message: err });
 
                                     User.findOneAndUpdate({ _id: user._id }, { "$push": { "addresses": address } }, function(err, updatedUser) {
@@ -126,6 +135,9 @@ router.post('/login', function(req, res) {
                     };
                     var token = jwt.sign(payload, config.secret, {
                         expiresIn: 1440 * 60 // expires in 24 hours
+                    });
+                    User.update(user, { $set: { 'lastLoginDate': Date.now(), 'lastLoginIpAddress': req.ip } }, function(err, updatedUser) {
+                        if (err) res.status(500).send({ success: false, message: "Something went wrong. Please try again later." });
                     });
                     res.json({
                         success: true,

@@ -9,6 +9,8 @@ var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var jwt = require('jsonwebtoken');
 var app = express();
+var RateLimit = require('express-rate-limit');
+
 
 var index = require('./routes/index');
 var users = require('./routes/users');
@@ -45,6 +47,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+var limiter = new RateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    delayMs: 0 // disable delaying - full speed until the max limit is reached
+});
+
+app.use(limiter); //all requests
 
 app.use('/', index);
 app.use('/v1/users', users);

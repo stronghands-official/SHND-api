@@ -13,7 +13,7 @@ router.get('/:address', function(req, res) {
 });
 
 router.get('/', function(req, res) {
-    res.status(400).send('Ops, something went wrong! Did you forget to enter your address? --> https://api.stronghands.info/qrimage/(YOUR-ADDRESS)')
+    res.send('Ops, something went wrong! Did you forget to enter your address? --> https://api.stronghands.info/qrimage/<YOUR-ADDRESS>')
 });
 
 module.exports = router;

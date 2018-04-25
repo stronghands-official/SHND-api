@@ -13,7 +13,7 @@ router.get('/', function(req, res) {
     client.getInfo(function(err, info) {
         if (err) res.status(503).send(JSON.stringify({ error: "Service unavailable." }));
         var response = request("https://cryptobe.com/chain/StrongHands/q/totalbc", function(error, response, body) {
-            res.send(JSON.stringify({ moneysupply: body }));
+            res.send(JSON.stringify({ moneysupply: body })); //TODO: use own wallet when its fixed
         });
     });
 });
