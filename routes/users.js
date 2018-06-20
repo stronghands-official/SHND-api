@@ -7,6 +7,7 @@ var jwt = require('jsonwebtoken');
 var request = require('request');
 var RateLimit = require('express-rate-limit');
 var User = require('../models/user');
+var crypto = require('crypto');
 
 
 var createAccountLimiter = new RateLimit({
@@ -44,74 +45,77 @@ router.post('/register', createAccountLimiter, function(req, res) {
             if (emailhosts.includes(email.split('@')[1])) {
                 res.send({ success: false, message: 'Email provider is blacklisted.' });
             } else {
-                require('crypto').randomBytes(30, function(err, buffer) {
-                    var token = buffer.toString('hex');
-                    var userData = new User({
-                        'email': email,
-                        'username': username,
-                        'password': password,
-                        'securityCode': null,
-                        'isAdmin': false,
-                        'isConfirmed': false,
-                        'confirmationToken': token,
-                        'createDate': Date.now(),
-                        'lastLoginDate': null,
-                        'lastLoginIpAddress': null,
-                        'addressses': [],
-                        'balance': 0
-                    });
-                    var payload = {
-                        username: username,
-                        confirmationToken: token
-                    };
-                    var confirmationJWT = jwt.sign(payload, config.secret, {
-                        expiresIn: 15 * 60 // expires in 15min
-                    });
-                    var confirmationLink = new URL('https://api.stronghands.info/v1/users/confirm');
-                    confirmationLink.searchParams.append('token', confirmationJWT);
-                    var emailEndpoint = new URL('https://mail.zoho.eu/api/accounts/419662000000002002/messages');
-                    User.create(userData, function(error, user) {
-                        if (error) {
-                            res.send({ success: false, message: 'Username or email already taken.' });
-                        } else {
-                            request({
-                                url: emailEndpoint.toString(),
-                                method: 'POST',
-                                headers: {
-                                    Authorization: "Zoho-authtoken 9a8d884b2bbdf359499ee6fcf6c3dde1",
-                                },
-                                json: true,
-                                body: {
-                                    'fromAddress': 'contact@stronghands.info',
-                                    'toAddress': email,
-                                    'subject': 'StrongHands - Email confirmation',
-                                    'content': '<h4>Welcome to the StrongHands community!</h4> Click the link down below to confirm your email address.<br /><br /><a href="' + confirmationLink.toString() + '"> Confirm </a><br /><br /> Enjoy your stay! <br /><b> the StrongHands Team</b>'
-                                }
-                            }, function(err, httpResponse, body) {
-                                if (err) {
-                                    User.remove({ _id: user._id }, function(err) {
-                                        if (err) res.status(500).send({ success: false, message: 'Something went wrong. Please try again later.' });
-                                    });
-                                    res.status(500).send({ success: false, message: 'Unable to send confirmation email.' });
-                                }
-                                client.getNewAddress(user._id, function(err, address) {
-                                    if (err) res.status(500).send({ success: false, message: err });
-
-                                    User.findOneAndUpdate({ _id: user._id }, { "$push": { "addresses": address } }, function(err, updatedUser) {
+                crypto.randomBytes(30, function(err, tokenBuffer) {
+                    if(err){
+                        res.status(500).send({success:false, message: 'Something went wrong. Please try again later or contact the SHND support on Discord.'})
+                    }
+                    var token = tokenBuffer.toString('hex');
+                        var accountID = accountIdBuffer.toString('hex');
+                        var userData = new User({
+                            'email': email,
+                            'username': username,
+                            'password': password,
+                            'securityCode': null,
+                            'isAdmin': false,
+                            'isConfirmed': false,
+                            'confirmationToken': token,
+                            'createDate': Date.now(),
+                            'lastLoginDate': null,
+                            'lastLoginIpAddress': null,
+                            'addressses': []
+                            
+                        });
+                        var payload = {
+                            username: username,
+                            confirmationToken: token
+                        };
+                        var confirmationJWT = jwt.sign(payload, config.secret, {
+                            expiresIn: 15 * 60 // expires in 15min
+                        });
+                        var confirmationLink = new URL('https://api.stronghands.info/v1/users/confirm');
+                        confirmationLink.searchParams.append('token', confirmationJWT);
+                        var emailEndpoint = new URL('https://mail.zoho.eu/api/accounts/419662000000002002/messages');
+                        User.create(userData, function(error, user) {
+                            if (error) {
+                                res.send({ success: false, message: 'Username or email already taken.' });
+                            } else {
+                                request({
+                                    url: emailEndpoint.toString(),
+                                    method: 'POST',
+                                    headers: {
+                                        Authorization: "Zoho-authtoken 9a8d884b2bbdf359499ee6fcf6c3dde1",
+                                    },
+                                    json: true,
+                                    body: {
+                                        'fromAddress': 'contact@stronghands.info',
+                                        'toAddress': email,
+                                        'subject': 'StrongHands - Email confirmation',
+                                        'content': '<h4>Welcome to the StrongHands community!</h4> Click the link down below to confirm your email address.<br /><br /><a href="' + confirmationLink.toString() + '"> Confirm </a><br /><br /> Enjoy your stay! <br /><b> the StrongHands Team</b>'
+                                    }
+                                }, function(err, httpResponse, body) {
+                                    if (err) {
+                                        User.remove({ _id: user._id }, function(err) {
+                                            if (err) res.status(500).send({ success: false, message: 'Something went wrong. Please try again later.' });
+                                        });
+                                        res.status(500).send({ success: false, message: 'Unable to send confirmation email.' });
+                                    }
+                                    client.getNewAddress(user._id, function(err, address) {
                                         if (err) res.status(500).send({ success: false, message: err });
-                                        res.send({
-                                            success: true,
-                                            message: 'User saved successfully'
+
+                                        User.findOneAndUpdate({ _id: user._id }, { "$push": { "addresses": address } }, function(err, updatedUser) {
+                                            if (err) res.status(500).send({ success: false, message: err });
+                                            res.send({
+                                                success: true,
+                                                message: 'User saved successfully'
+                                            });
                                         });
                                     });
                                 });
-                            });
-                        }
-                    });
+                            }
+                       });
                 });
             }
         });
-
     }
 });
 

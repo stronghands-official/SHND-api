@@ -29,11 +29,15 @@ var UserSchema = new mongoose.Schema({
         required: false,
         default: false
     },
-    addressses: [{
+    addressses: [{address:{
         type: String,
         required: false,
-        default: []
-    }],
+        default: ''
+    },description:{
+        type: String,
+        required: false,
+        default: ''
+    }}],
     isConfirmed: {
         type: Boolean,
         required: true,

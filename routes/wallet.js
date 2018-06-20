@@ -56,7 +56,7 @@ router.put('/addresses', function(req, res) {
     var client = req.stronghandsclient;
     var decodedToken = req.decoded;
     client.getNewAddress(decodedToken._id, function(err, address) {
-        User.findOneAndUpdate({ username: decodedToken.username }, { "$push": { "addresses": address } }, function(err, user) {
+        User.findOneAndUpdate({ username: decodedToken.username }, { "$push": { "addresses": {address:address, description:''} } }, function(err, user) {
             if (err) res.send({ success: false, message: err });
             else {
                 res.send({ success: true, address: address });
@@ -91,10 +91,6 @@ function preValidateAddress(address) {
     return alphanumericpattern.test(address);
 }
 router.post('/send', function(req, res) {
-    var token = req.token;
-    var client = req.stronghandsclient;
-    var decodedToken = req.decoded;
-    var token = req.token;
     var client = req.stronghandsclient;
     var decodedToken = req.decoded;
     var amount = parseInt(req.get("amount"));
