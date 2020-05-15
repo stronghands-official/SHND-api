@@ -1,3 +1,5 @@
+# Disclaimer - This is an old project! 
+
 # StrongHands Official API Development Repository
 
 ## Repo Info
